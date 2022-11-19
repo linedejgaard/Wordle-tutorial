@@ -4,10 +4,8 @@ import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
-import javax.swing.JComponent;
+import javax.swing.JComponent;  
 import java.awt.event.KeyListener;
-
-import java.awt.Image;
 
 public class WordleGUI extends JComponent implements KeyListener {
 
@@ -16,6 +14,7 @@ public class WordleGUI extends JComponent implements KeyListener {
     
     // Images: keys: a-z (0-25)
     private Image[] keyImages;
+    private char[][] letters;
 
     private GameState gameState;
 
@@ -23,8 +22,8 @@ public class WordleGUI extends JComponent implements KeyListener {
     private Image correctKey, almostCorrectKey, wrongKey, unknownKey;
     private Image correctMessage, invalidMessage, finishMessage;
 
-    private int KEY_WIDTH = 92/2;
-    private int KEY_HEIGHT = 138/2;
+    private int KEY_WIDTH; // = 46;
+    private int KEY_HEIGHT; // = 69;
 
     private int LETTER_WIDTH = 75;
     private int LETTER_HEIGHT = 75;
@@ -37,8 +36,12 @@ public class WordleGUI extends JComponent implements KeyListener {
     public WordleGUI() throws Exception {
         gameState = new GameState();
         keyboard = new Keyboard();
+        letters = keyboard.getLetters();
         letterResponses = gameState.getLetterResponses();
         guessResponses = gameState.getGussResponses();
+
+        KEY_WIDTH = 46;
+        KEY_HEIGHT = 69;
 
         this.setFocusable(true);
         this.addKeyListener(this);
@@ -49,21 +52,21 @@ public class WordleGUI extends JComponent implements KeyListener {
         setKeyImages();
     }
 
-    public void setImages() throws IOException {
+    private void setImages() throws IOException {
 
         correctMessage = ImageIO.read(new File("messages/Correct.png"));
         finishMessage = ImageIO.read(new File("messages/Finish.png"));
         invalidMessage = ImageIO.read(new File("messages/Invalid.png"));
     }
     
-    public void setKeyImages() throws IOException {
+    private void setKeyImages() throws IOException {
         correctKey = ImageIO.read(new File("keys/Correct.png")).getScaledInstance(KEY_WIDTH, KEY_HEIGHT, ABORT);      
         almostCorrectKey = ImageIO.read(new File("keys/Almost_correct.png")).getScaledInstance(KEY_WIDTH, KEY_HEIGHT, ABORT);        
         wrongKey = ImageIO.read(new File("keys/Wrong.png")).getScaledInstance(KEY_WIDTH, KEY_HEIGHT, ABORT);      
         unknownKey = ImageIO.read(new File("keys/Unknown.png")).getScaledInstance(KEY_WIDTH, KEY_HEIGHT, ABORT);      
     }
 
-    public void setLetterImages() throws IOException {
+    private void setLetterImages() throws IOException {
         correctLetter = ImageIO.read(new File("letters/Correct.png")).getScaledInstance(LETTER_WIDTH, LETTER_HEIGHT, ABORT);      
         almostCorrectLetter = ImageIO.read(new File("letters/Almost_correct.png")).getScaledInstance(LETTER_WIDTH, LETTER_HEIGHT, ABORT);   
         wrongLetter = ImageIO.read(new File("letters/Wrong.png")).getScaledInstance(LETTER_WIDTH, LETTER_HEIGHT, ABORT);   
@@ -74,18 +77,16 @@ public class WordleGUI extends JComponent implements KeyListener {
     private void setLetters() throws IOException {
         this.letterImages = new Image[26];
         for (int i = 0; i < letterImages.length; i++) {
-            int asciicode = i+65;
-            String path = "letters/" + (char) asciicode + ".png";
+            String path = "letters/" + keyboard.getLetterFromNumber(i) + ".png";
             letterImages[i] = ImageIO.read(new File(path)).getScaledInstance(LETTER_WIDTH, LETTER_HEIGHT, ABORT);;      
         }
     }
 
     /* Save key pictures in array */
     private void setKeys() throws Exception {
-        this.keyImages = new Image[26];
+        keyImages = new Image[26];
         for (int i = 0; i < keyImages.length; i++) {
-            int asciicode = i+65;
-            String path = "keys/" + (char) asciicode + ".png";
+            String path = "keys/" + keyboard.getLetterFromNumber(i) + ".png";
             keyImages[i] = ImageIO.read(new File(path)).getScaledInstance(KEY_WIDTH, KEY_HEIGHT, ABORT);   
         }
     }
@@ -96,7 +97,6 @@ public class WordleGUI extends JComponent implements KeyListener {
         int imSize = 90;
         int ins = 1680/2-(3*imSize-40); //1680/2-((5/2)*90): width in pixels / 2 - (5*imSize) //google: how many pixels is my screen
 
-        g.setColor(Color.black);
         drawKeys(g);
         drawBoard(g);
         
@@ -115,7 +115,7 @@ public class WordleGUI extends JComponent implements KeyListener {
         }
     }
 
-    public void drawBoard(Graphics g) {
+    private void drawBoard(Graphics g) {
         int imSize = 90;
         int ins = 1680/2-(3*imSize-40); //1680/2-((5/2)*90): width in pixels / 2 - (5*imSize) //google: how many pixels is my screen
 
@@ -138,10 +138,9 @@ public class WordleGUI extends JComponent implements KeyListener {
             }
         }
     }
-    public void drawKeys(Graphics g) {
-        char[][] letters = keyboard.getLetters();
-        int imSize = 50;
-        int ins = 590; //380; //1680/2-(5*50): width in pixels / 2 - (5*imSize) //google: how many pixels is my screen
+    private void drawKeys(Graphics g) {
+        // int imSize = 50;
+        // int ins = 590; //380; //1680/2-(5*50): width in pixels / 2 - (5*imSize) //google: how many pixels is my screen
 
     	for (int row = 0; row < letters.length; row++){
             int rowLength = letters[row].length;
@@ -151,14 +150,17 @@ public class WordleGUI extends JComponent implements KeyListener {
                 char letter = letters[row][col];
                 int index = keyboard.getNumberInAlphabet(letter);
                 Response response = letterResponses[index];
+
+                int x = 590+(KEY_WIDTH+4)*col+(15-rowLength)*row*5;
+                int y = 640+(KEY_HEIGHT+20)*row;
                 
-                g.drawImage(getKeyImgFromResponse(response), imSize*col+ins+(15-rowLength)*row*5, imSize*row*2+ins+50, this); //Prøvede mig bare frem. Lægger rowlength og row til, fordi de forskellige rækker skal have forskellige indtryk
-                g.drawImage(keyImages[index], imSize*col+ins+(15-rowLength)*row*5, imSize*row*2+ins+50, this); //Prøvede mig bare frem. Lægger rowlength og row til, fordi de forskellige rækker skal have forskellige indtryk
+                g.drawImage(getKeyImgFromResponse(response), x, y, this); //Prøvede mig bare frem. Lægger rowlength og row til, fordi de forskellige rækker skal have forskellige indtryk
+                g.drawImage(keyImages[index], x, y, this); //Prøvede mig bare frem. Lægger rowlength og row til, fordi de forskellige rækker skal have forskellige indtryk
             }
         }
     }
 
-    public Image getKeyImgFromResponse(Response response) {
+    private Image getKeyImgFromResponse(Response response) {
         switch (response) {
             case CORRECT:
                 return correctKey;
@@ -172,7 +174,7 @@ public class WordleGUI extends JComponent implements KeyListener {
         return null;
     }
 
-    public Image getLetterImgFromResponse(Response response) {
+    private Image getLetterImgFromResponse(Response response) {
         switch (response) {
             case CORRECT:
                 return correctLetter;

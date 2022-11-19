@@ -18,7 +18,9 @@ public class GameState {
         dictionary = new Dictionary("dictionary/word-list.txt");
         currentGuess = new Word();
         letterResponses = new Response[26];
-        secretWord = new Word(dictionary.getRandomStringWord());
+        // secretWord = new Word("ASSES");
+        secretWord = new Word("GRASS");
+        // secretWord = new Word(dictionary.getRandomStringWord());
         System.out.println(secretWord.toString());
 
         numGuess = 0;
